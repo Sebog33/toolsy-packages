@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { repairJson } from './index';
+import { repairJson } from '@/index';
 
 describe('repairJson', () => {
   it('repairs unquoted keys and trailing comma', () => {

@@ -1,8 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../packages/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

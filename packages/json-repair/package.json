@@ -1,14 +1,35 @@
 {
   "name": "@toolsy/json-repair",
   "version": "0.1.0",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "test": "vitest"
+    "test": "vitest",
+    "dev": "vitest watch"
   },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "json",
+    "repair",
+    "fix",
+    "parser",
+    "toolsy"
+  ],
+  "author": "Sebastien Carriot <sebastien@digiteld.com>",
+  "license": "MIT",
   "devDependencies": {
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.1",
+    "typescript": "^5.0.0",
+    "@types/node": "^18.0.0"
   }
 }
