@@ -1,5 +1,5 @@
 {
-  "name": "@toolsy/json-repair",
+  "name": "@toolsycc/json-repair",
   "version": "0.1.0",
   "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
   "main": "dist/index.js",
@@ -16,7 +16,9 @@
     "dev": "vitest watch"
   },
   "files": [
-    "dist"
+    "dist/index.js",
+    "dist/index.d.ts",
+    "README.md"
   ],
   "keywords": [
     "json",
