@@ -18,13 +18,13 @@ Each tool is fully independent, lightweight, and designed to solve one dev pain 
 
 ```
 toolsy/
-├── apps/                   # UI, documentation, or playground apps
-├── packages/               # Reusable NPM packages
-│   ├── json-repair/        # JSON repair utility
-│   └── ...
-├── pnpm-workspace.yaml     # PNPM monorepo config
-├── turbo.json              # Build pipeline config (Turborepo)
-└── tsconfig.base.json      # Shared TS config
+├── packages/                  # All reusable NPM packages
+│   ├── json-repair/          # JSON repair utility
+│   └── typescript-config/    # Shared TypeScript config
+├── pnpm-workspace.yaml       # PNPM monorepo config
+├── turbo.json                # Build pipeline config (Turbo v2)
+├── package.json              # Root configuration and scripts
+└── README.md                 # You're here
 ```
 
 ---
@@ -42,7 +42,7 @@ pnpm add @toolsy/json-repair
 ## 👨‍💻 Author
 
 Made by [@Sebog33](https://github.com/Sebog33)  
-Website: [https://toolsy.cc](https://toolsy.cc)
+Follow [Toolsy](https://toolsy.cc) for more tiny dev-focused utilities.
 
 ---
 

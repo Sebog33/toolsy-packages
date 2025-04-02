@@ -91,7 +91,7 @@ It can also be used to quickly recover and parse broken logs or hand-crafted con
 
 ## 👨‍💻 Author
 
-Made with ❤️ by [@Seb](https://github.com/Sebog33)  
+Made by [@Sebog33](https://github.com/Sebog33)  
 Follow [Toolsy](https://toolsy.cc) for more tiny dev-focused utilities.
 
 ---
