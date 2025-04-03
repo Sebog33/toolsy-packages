@@ -1,6 +1,6 @@
 {
   "name": "@toolsycc/json-repair",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "A robust utility to repair JSON strings - fix malformed or broken JSON, especially from LLM output like ChatGPT.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,9 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "dev": "vitest watch"
+    "dev": "vitest watch",
+    "release": "npm publish --access public",
+    "release:dry-run": "npm publish --access public --dry-run"
   },
   "files": [
     "dist/index.js",
