@@ -57,6 +57,30 @@ importers:
         specifier: ^8.29.0
         version: 8.29.0(eslint@9.23.0)(typescript@5.8.2)
 
+  packages/json-diff:
+    devDependencies:
+      '@types/node':
+        specifier: ^18.0.0
+        version: 18.19.86
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.2
+      vitest:
+        specifier: ^3.1.1
+        version: 3.1.1(@types/node@18.19.86)
+
+  packages/json-merge:
+    devDependencies:
+      '@types/node':
+        specifier: ^18.0.0
+        version: 18.19.86
+      typescript:
+        specifier: ^5.0.0
+        version: 5.8.2
+      vitest:
+        specifier: ^3.1.1
+        version: 3.1.1(@types/node@18.19.86)
+
   packages/json-repair:
     devDependencies:
       '@types/node':

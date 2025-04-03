@@ -1,7 +1,7 @@
 {
-  "name": "@toolsycc/json-repair",
-  "version": "0.1.1",
-  "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
+  "name": "@toolsycc/json-diff",
+  "version": "0.1.0",
+  "description": "A lightweight utility to compare, intersect or subtract JSON objects deeply.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -23,13 +23,12 @@
   "keywords": [
     "toolsy",
     "json",
-    "repair",
-    "fix",
-    "parser",
-    "malformed",
-    "invalid",
-    "broken",
-    "llm"
+    "diff",
+    "compare",
+    "intersect",
+    "subtract",
+    "objects",
+    "deep"
   ],
   "author": "Sebastien Carriot <sebastien@digiteld.com>",
   "license": "MIT",

@@ -1,13 +1,13 @@
 export interface RepairOptions {
-  safeMode?: boolean;      // Si true => on limite les réparations "lourdes" (voir le code) et on lève "Unable to repair invalid JSON." si c'est encore invalide
-  extractJson?: boolean;   // Tente d'extraire le premier bloc JSON valide
-  encodeAscii?: boolean;   // Convertit tous les caractères non-ASCII en notation \uXXXX
-  returnObject?: boolean;  // Si true, renvoie un objet JS au lieu d'une string JSON (par défaut : false)
-  logging?: boolean;       // Log chaque étape de transformation
+  safeMode?: boolean;      // If true => limits "heavy" repairs (see code) and throws "Unable to repair invalid JSON." if still invalid
+  extractJson?: boolean;   // Attempts to extract the first valid JSON block
+  encodeAscii?: boolean;   // Converts all non-ASCII characters to \uXXXX notation
+  returnObject?: boolean;  // If true, returns a JS object instead of a JSON string (default: false)
+  logging?: boolean;       // Log each transformation step
 }
 
 /**
- * Tente d'extraire un bloc JSON valide (entre accolades ou crochets) dans une chaîne
+ * Attempts to extract a valid JSON block (between braces or brackets) from a string
  */
 export function extractJsonFromText(input: string): string {
   let cleaned = input.trim()
@@ -18,15 +18,15 @@ export function extractJsonFromText(input: string): string {
   const firstBrace = cleaned.indexOf('{');
   const firstBracket = cleaned.indexOf('[');
 
-  // On cherche le premier "{" ou "[" pour deviner le début du JSON
+  // We look for the first "{" or "[" to guess the beginning of the JSON
   const start = firstBrace >= 0 && (firstBrace < firstBracket || firstBracket === -1)
     ? firstBrace
     : firstBracket;
 
-  // Si pas trouvé, on renvoie le input tel quel
+  // If not found, we return the input as is
   if (start === -1) return input;
 
-  // On parcourt la chaîne depuis "start" jusqu'à ce que les accolades/crochets soient équilibrés
+  // We traverse the string from "start" until the braces/brackets are balanced
   const stack: string[] = [];
   let end = start;
   for (let i = start; i < cleaned.length; i++) {
@@ -36,10 +36,10 @@ export function extractJsonFromText(input: string): string {
     } else if (char === '}' || char === ']') {
       const last = stack.pop();
       if (!last || (char === '}' && last !== '{') || (char === ']' && last !== '[')) {
-        // Déséquilibre, on arrête
+        // Imbalance, we stop
         break;
       }
-      // Si la pile est vide, on a refermé tout, on peut s'arrêter
+      // If the stack is empty, we've closed everything, we can stop
       if (stack.length === 0) {
         end = i + 1;
         break;
@@ -51,8 +51,8 @@ export function extractJsonFromText(input: string): string {
 }
 
 /**
- * Répare les éventuels petits bouts de chaînes brisés
- * (cas simpliste : {foo: bar} sur une seule ligne).
+ * Repairs any broken string fragments
+ * (simple case: {foo: bar} on a single line).
  */
 function fixBrokenStringValues(json: string): string {
   return json
@@ -72,7 +72,7 @@ function fixBrokenStringValues(json: string): string {
       if (value.includes('"')) {
         if (!value.startsWith('"')) value = '"' + value;
         if (!value.endsWith('"')) value = value + '"';
-        // On échappe les guillemets internes non protégés
+        // We escape unprotected inner quotes
         value = value.slice(1, -1).replace(/(?<!\\)"/g, '\\"');
         value = '"' + value + '"';
       }
@@ -83,11 +83,11 @@ function fixBrokenStringValues(json: string): string {
 }
 
 /**
- * Échappe les guillemets non protégés à l’intérieur des valeurs déjà entre guillemets.
+ * Escapes unprotected quotes inside values already between quotes.
  */
 function escapeInnerQuotesInStrings(json: string): string {
   return json.replace(/"([^"\n\\]*?)"/g, (match, content) => {
-    // On ne modifie que si on trouve des guillemets non échappés
+    // We only modify if we find unescaped quotes
     if (/[^\\]"/.test(content)) {
       const safe = content.replace(/([^\\])"/g, '$1\\"');
       return `"${safe}"`;
@@ -97,13 +97,13 @@ function escapeInnerQuotesInStrings(json: string): string {
 }
 
 /**
- * Équilibrage naïf des accolades et crochets :
- * - Retire les fermants "en trop" s'il n'y avait pas d'ouvrant correspondant.
- * - Ajoute les fermants manquants en fin de chaîne si nécessaire.
+ * Naive balancing of braces and brackets:
+ * - Removes "excess" closing brackets if there was no corresponding opening bracket.
+ * - Adds missing closing brackets at the end of the string if necessary.
  */
 function balanceJsonBrackets(input: string): string {
-  let curlyCount = 0;   // comptage pour { }
-  let squareCount = 0;  // comptage pour [ ]
+  let curlyCount = 0;   // counting for { }
+  let squareCount = 0;  // counting for [ ]
   const chars = [...input];
 
   for (let i = 0; i < chars.length; i++) {
@@ -111,19 +111,19 @@ function balanceJsonBrackets(input: string): string {
     if (c === '{') {
       curlyCount++;
     } else if (c === '}') {
-      // On a un '}' alors qu'il n'y a pas de '{' ouvert => on retire
+      // We have a '}' when there's no '{' open => we remove it
       if (curlyCount > 0) curlyCount--;
       else chars[i] = '';
     } else if (c === '[') {
       squareCount++;
     } else if (c === ']') {
-      // Même principe pour les crochets
+      // Same principle for brackets
       if (squareCount > 0) squareCount--;
       else chars[i] = '';
     }
   }
 
-  // Ajoute les fermants manquants si openCount > 0
+  // Add missing closing brackets if openCount > 0
   let result = chars.join('');
   if (curlyCount > 0) {
     result += '}'.repeat(curlyCount);
@@ -135,11 +135,11 @@ function balanceJsonBrackets(input: string): string {
 }
 
 /**
- * Remplace (dans les valeurs entre guillemets) les vrais \n, \r, \t
- * par leurs versions échappées \\n, \\r, \\t.
+ * Replaces (in values between quotes) real \n, \r, \t
+ * with their escaped versions \\n, \\r, \\t.
  *
- * Cette approche est naïve : si quelqu’un avait déjà écrit \n, cela devient \\n.
- * Mais pour ton test spécifique (et la majorité des cas), ça suffit.
+ * This approach is naive: if someone had already written \n, it becomes \\n.
+ * But for your specific test (and most cases), it's sufficient.
  */
 function escapeControlCharsInsideStrings(json: string): string {
   let inString = false;
@@ -149,16 +149,16 @@ function escapeControlCharsInsideStrings(json: string): string {
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
 
-    // Détecte les guillemets qui ouvrent/ferment une chaîne
+    // Detects quotes that open/close a string
     if (c === '"' && !escaped) {
       inString = !inString;
       escaped = false;
     } else if (c === '\\' && !escaped) {
-      // Backslash => le prochain caractère est échappé
+      // Backslash => the next character is escaped
       escaped = true;
     } else {
       if (inString) {
-        // Si on est à l'intérieur d'une chaîne, on remplace les vrais \n, \r, \t
+        // If we're inside a string, we replace real \n, \r, \t
         if (c === '\n') {
           chars[i] = '\\n';
         } else if (c === '\r') {
@@ -175,13 +175,13 @@ function escapeControlCharsInsideStrings(json: string): string {
 }
 
 /**
- * Répare une chaîne JSON potentiellement incorrecte en appliquant diverses
- * transformations (extraction, retrait des trailing commas, quoting, etc.).
- * Retourne soit un string JSON (par défaut) soit un objet JS (si `returnObject` est à true).
+ * Repairs a potentially incorrect JSON string by applying various
+ * transformations (extraction, removal of trailing commas, quoting, etc.).
+ * Returns either a JSON string (default) or a JS object (if `returnObject` is true).
  */
 export function repairJson(input: string, options: RepairOptions = {}): unknown {
   try {
-    // D'abord, on teste si c'est déjà parseable tel quel
+    // First, we test if it's already parseable as is
     const parsed = JSON.parse(input);
     if (!options.returnObject) {
       let json = JSON.stringify(parsed);
@@ -201,66 +201,71 @@ export function repairJson(input: string, options: RepairOptions = {}): unknown 
 
     let fixed = input;
 
-    // 1. Extraction optionnelle
+    // 1. Optional extraction
     if (options.extractJson) {
       fixed = extractJsonFromText(fixed);
       if (options.logging) console.log('Extracted JSON block:', fixed);
     }
 
-    // 2. Retrait des commentaires
+    // 2. Removal of comments
     fixed = fixed.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
     if (options.logging) console.log('Removed comments:', fixed);
 
-    // 3. Retrait des trailing commas
+    // 3. Removal of trailing commas
     fixed = fixed.replace(/,\s*([\]}])/g, '$1');
     if (options.logging) console.log('Removed trailing commas:', fixed);
 
-    // 4. Ajout de guillemets autour des clés non guillémées
+    // 4. Adding quotes around unquoted keys
     fixed = fixed.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
     if (options.logging) console.log('Quoted keys:', fixed);
 
-    // 5. Conversion des quotes simples en doubles
+    // 5. Conversion of single quotes to double quotes
     fixed = fixed.replace(/'([^']*)'/g, '"$1"');
     if (options.logging) console.log('Converted single to double quotes:', fixed);
 
-    // 6. Remplacement des littéraux invalides (NaN, undefined, Infinity, -Infinity)
+    // 6. Replacement of invalid literals (NaN, undefined, Infinity, -Infinity)
     fixed = fixed.replace(/\b(NaN|undefined|Infinity|-Infinity)\b/g, 'null');
     if (options.logging) console.log('Replaced invalid literals:', fixed);
 
-    // 6bis. Remplacement des versions capitalisées
+    // 6bis. Replacement of capitalized versions
     fixed = fixed.replace(/\bTrue\b/g, 'true')
     .replace(/\bTRUE\b/g, 'true')
-    .replace(/\bFalse\b/g, 'false') // voire juste /false\b/i si tu veux tout gérer
-    .replace(/\bFALSE\b/g, 'false') // voire juste /false\b/i si tu veux tout gérer
+    .replace(/\bFalse\b/g, 'false') // or just /false\b/i if you want to handle everything
+    .replace(/\bFALSE\b/g, 'false') // or just /false\b/i if you want to handle everything
     .replace(/\bNull\b/g, 'null')
     .replace(/\bNULL\b/g, 'null');
     if (options.logging) console.log('Replaced capitalized True/False/Null:', fixed);
 
-    // 7. Quoter les valeurs non guillémées (hors true/false/null)
+    // 7. Quoting unquoted values (except true/false/null)
     fixed = fixed.replace(/:\s*(?!true\b|false\b|null\b)([a-zA-Z_][a-zA-Z0-9_]*)([\}\],])/g, ': "$1"$2');
     if (options.logging) console.log('Quoted unquoted string values:', fixed);
 
-    // 8. Réparer les éventuelles lignes type {foo: bar}
+    // 7bis. Fix the case where we have : John", i.e. an unquoted word followed by a quote
+    fixed = fixed.replace(/:\s*([a-zA-Z0-9_]+)"([\}\],])/g, ': "$1"$2');
+    if (options.logging) console.log('Fixed missing opening quote for values:', fixed);
+
+    // 8. Fix any lines like {foo: bar}
     fixed = fixBrokenStringValues(fixed);
     if (options.logging) console.log('Fixed broken string values:', fixed);
 
-    // 9. Échapper les guillemets non protégés dans les strings
+    // 9. Escape unprotected quotes in strings
     fixed = escapeInnerQuotesInStrings(fixed);
     if (options.logging) console.log('Escaped inner unquoted double quotes:', fixed);
 
-    // 10. Équilibrage des accolades/crochets (si on considère qu'en safeMode on veut pas trop "surcorriger", on peut conditionner)
+    // 10. Balancing of braces/brackets (if we consider that in safeMode we don't want to "overcorrect" too much, we can condition it)
     if (!options.safeMode) {
       fixed = balanceJsonBrackets(fixed);
       if (options.logging) console.log('Balanced brackets:', fixed);
     }
 
-    // 11. Échapper les vrais retours ligne, tab, etc. dans les strings
+    // 11. Escape real line breaks, tabs, etc. in strings
     fixed = escapeControlCharsInsideStrings(fixed);
     if (options.logging) console.log('Escaped control chars:', fixed);
 
-    // Dernière tentative
+    // Last attempt
     try {
       const repaired = JSON.parse(fixed);
+    
       if (!options.returnObject) {
         let json = JSON.stringify(repaired);
         if (options.encodeAscii) {
@@ -270,15 +275,24 @@ export function repairJson(input: string, options: RepairOptions = {}): unknown 
         }
         return json;
       }
+    
       return repaired;
-    } catch (finalError) {
+    } catch (err: any) {
       if (options.logging) {
-        console.warn('Repair failed:', finalError);
+        console.warn('[json-repair] Repair failed:', err);
       }
+    
+      const preview = input.slice(0, 100).replace(/\n/g, ' ').trim(); // short preview
+    
+      const baseMessage = `[json-repair] Failed to parse repaired JSON.`;
+      const details = err instanceof Error ? err.message : 'Unknown parsing error';
+      const combined = `${baseMessage} ${details} Input was: "${preview}..."`;
+    
       if (options.safeMode) {
-        throw new Error('Unable to repair invalid JSON.');
+        throw new Error(baseMessage);
+      } else {
+        throw new Error(combined);
       }
-      throw finalError;
     }
   }
 }

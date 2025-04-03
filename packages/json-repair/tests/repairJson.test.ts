@@ -86,4 +86,11 @@ describe('repairJson', () => {
     const result = repairJson(input);
     expect(result).toBe('{"name":"Seb","age":30}');
   });
+
+  it('repairs several errors on one line', () => {
+    const input = '{"name": John", "age": 30, "city": "New York "';
+    const result = repairJson(input);
+    expect(result).toBe('{"name":"John","age":30,"city":"New York "}');
+  });
+
 });

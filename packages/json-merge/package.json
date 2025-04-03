@@ -1,7 +1,7 @@
 {
-  "name": "@toolsycc/json-repair",
-  "version": "0.1.1",
-  "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
+  "name": "@toolsycc/json-merge",
+  "version": "0.1.0",
+  "description": "A utility to deeply and safely merge JSON objects, with full TypeScript support.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -23,13 +23,11 @@
   "keywords": [
     "toolsy",
     "json",
-    "repair",
-    "fix",
-    "parser",
-    "malformed",
-    "invalid",
-    "broken",
-    "llm"
+    "merge",
+    "deep merge",
+    "merge objects",
+    "immutable",
+    "typescript"
   ],
   "author": "Sebastien Carriot <sebastien@digiteld.com>",
   "license": "MIT",

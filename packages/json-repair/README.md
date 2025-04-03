@@ -1,10 +1,9 @@
-# @toolsy/json-repair
+# @toolsycc/json-repair
 
-> 🛠️ A small but powerful utility to repair broken JSON strings — especially useful when dealing with LLM output or hand-written JSON.
+> A small but powerful utility to repair broken JSON strings — especially useful when dealing with LLM output or hand-written JSON.  
+> ✅ Works seamlessly with both **TypeScript** and **JavaScript** (ESM & CommonJS).
 
----
-
-## ✨ Features
+## Features
 
 - Fixes:
   - Unquoted keys
@@ -16,30 +15,28 @@
   - Missing closing braces
   - Misplaced quotes inside strings
   - LLM code blocks (e.g. ```json ... ```)
+  - LLM JSON extraction (e.g. `The result is: {...}`)
 - Option to return a string or JS object
 - ASCII escaping (e.g. `Café` → `Caf\u00e9`)
 - Safe fallback mode
 
----
-
-## 🚀 Install
+## Install
 
 ```bash
-pnpm add @toolsy/json-repair
+pnpm add @toolsycc/json-repair
 ```
 
 Or with npm:
 
 ```bash
-npm install @toolsy/json-repair
+npm install @toolsycc/json-repair
 ```
 
----
+## Example usage
 
-## 🧪 Example usage
-
+### 🟦 TypeScript
 ```ts
-import { repairJson } from '@toolsy/json-repair';
+import { repairJson } from '@toolsycc/json-repair';
 
 const input = `{name: Seb, age: 42,}`;
 const repaired = repairJson(input);
@@ -47,9 +44,21 @@ console.log(repaired);
 // → {"name":"Seb","age":42}
 ```
 
----
+### 🟨 JavaScript (CommonJS)
+```js
+const { repairJson } = require('@toolsycc/json-repair');
 
-## 🔧 Options
+console.log(repairJson('{name: Seb, age: 42,}'));
+```
+
+### 🟩 JavaScript (ESM)
+```js
+import { repairJson } from '@toolsycc/json-repair';
+
+console.log(repairJson('{name: Seb, age: 42,}'));
+```
+
+## Options
 
 | Option         | Type     | Default | Description |
 |----------------|----------|---------|-------------|
@@ -59,9 +68,7 @@ console.log(repaired);
 | `logging`      | boolean  | `false` | Enables console logs of each transformation step |
 | `safeMode`     | boolean  | `false` | If true, throws a friendly error instead of crashing on unrecoverable input |
 
----
-
-## ✅ Examples
+## Examples
 
 | Input                               | Output                                  |
 |------------------------------------|------------------------------------------|
@@ -69,33 +76,23 @@ console.log(repaired);
 | `{user: {name: Seb, age: 30}}`     | `{"user":{"name":"Seb","age":30}}`      |
 | `{value: NaN}`                     | `{"value":null}`                        |
 | `'{"text": "Café"}'` + `encodeAscii: true` | `{"text":"Caf\u00e9"}`           |
-| `Hello!\n\n\`\`\`json\n{name: Seb}`   | `{"name":"Seb"}`                        |
+| `Hello!\n\n\\`\\`\\`json\n{name: Seb}`   | `{"name":"Seb"}`                        |
 
----
+## Live demonstration
 
-## 🧠 Motivation
+Try it: [Toolsy](https://www.toolsy.cc/tools/json/analyze)
 
-This package was designed to help deal with **malformed JSON**, especially the kind you get from LLMs like ChatGPT or Copilot when asking for `json` output.
+## Motivation
+
+This package was designed to help deal with **malformed JSON**, especially the kind you get from LLMs like ChatGPT and OpenAI APIs when asking for `json` output.
 
 It can also be used to quickly recover and parse broken logs or hand-crafted config files.
 
----
-
-## 🧩 Future plans
-
-- Handle broken arrays and objects across multiple lines
-- Add a CLI tool (`npx @toolsy/json-repair <file>`)
-- Allow custom sanitization rules via plugins
-
----
-
-## 👨‍💻 Author
+## Author
 
 Made by [@Sebog33](https://github.com/Sebog33)  
-Follow [Toolsy](https://toolsy.cc) for more tiny dev-focused utilities.
+Follow [Toolsy](https://www.toolsy.cc) for more tiny dev-focused utilities.
 
----
-
-## 📄 License
+## License
 
 MIT
