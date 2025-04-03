@@ -1,6 +1,7 @@
 # @toolsycc/json-repair
 
 > A small but powerful utility to repair broken JSON strings — especially useful when dealing with LLM output or hand-written JSON.  
+> Need to repair JSON? This tool automatically fixes malformed or broken JSON structures with a single function call.
 > ✅ Works seamlessly with both **TypeScript** and **JavaScript** (ESM & CommonJS).
 
 ## Features
@@ -85,7 +86,7 @@ Try it: [Toolsy](https://www.toolsy.cc/tools/json/analyze)
 ## Motivation
 
 This package was designed to help deal with **malformed JSON**, especially the kind you get from LLMs like ChatGPT and OpenAI APIs when asking for `json` output.
-
+This package is ideal if you're looking to **repair JSON**, **fix malformed JSON**, or **sanitize AI-generated output**.
 It can also be used to quickly recover and parse broken logs or hand-crafted config files.
 
 ## Author

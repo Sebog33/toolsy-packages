@@ -13,7 +13,9 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "dev": "vitest watch"
+    "dev": "vitest watch",
+    "publish": "npm publish --access public",
+    "publish:dry-run": "npm publish --access public --dry-run"
   },
   "files": [
     "dist/index.js",

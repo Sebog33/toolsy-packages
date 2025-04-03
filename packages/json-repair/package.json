@@ -1,7 +1,7 @@
 {
   "name": "@toolsycc/json-repair",
   "version": "0.1.21",
-  "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
+  "description": "A robust utility to repair JSON strings - fix malformed or broken JSON, especially from LLM output like ChatGPT.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -24,6 +24,13 @@
     "toolsy",
     "json",
     "repair",
+    "json repair",
+    "repair json",
+    "fix json",
+    "json fixer",
+    "fix broken json",
+    "fix malformed json",
+    "llm json",
     "validate",
     "check",
     "fix",
