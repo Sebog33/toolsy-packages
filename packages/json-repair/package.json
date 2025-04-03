@@ -1,6 +1,6 @@
 {
   "name": "@toolsycc/json-repair",
-  "version": "0.1.1",
+  "version": "0.1.21",
   "description": "A robust utility to fix and repair broken JSON strings, especially from LLM output.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

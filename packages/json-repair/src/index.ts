@@ -175,6 +175,38 @@ function escapeControlCharsInsideStrings(json: string): string {
 }
 
 /**
+ * Removes comments that contain a closing brace without a matching opening brace
+ * This helps with cases like {name: Seb // test comments}
+ */
+function removeCommentsWithUnmatchedBraces(json: string): string {
+  // First, find all comment positions
+  const commentMatches = [...json.matchAll(/\/\/.*/g)];
+  
+  let result = json;
+  
+  // Process each comment from the end to avoid index shifting
+  for (let i = commentMatches.length - 1; i >= 0; i--) {
+    const match = commentMatches[i];
+    const commentStart = match.index!;
+    const commentText = match[0];
+    
+    // Check if the comment contains a closing brace
+    if (commentText.includes('}')) {
+      // Find the position of the closing brace in the comment
+      const braceInComment = commentText.indexOf('}');
+      
+      // Keep the closing brace and everything after it
+      const afterBrace = commentText.substring(braceInComment);
+      
+      // Replace the comment with just the closing brace and what follows
+      result = result.substring(0, commentStart) + afterBrace + result.substring(commentStart + commentText.length);
+    }
+  }
+ 
+  return result;
+}
+
+/**
  * Repairs a potentially incorrect JSON string by applying various
  * transformations (extraction, removal of trailing commas, quoting, etc.).
  * Returns either a JSON string (default) or a JS object (if `returnObject` is true).
@@ -207,27 +239,31 @@ export function repairJson(input: string, options: RepairOptions = {}): unknown 
       if (options.logging) console.log('Extracted JSON block:', fixed);
     }
 
-    // 2. Removal of comments
+    // 2. Handle comments with unmatched braces
+    fixed = removeCommentsWithUnmatchedBraces(fixed);
+    if (options.logging) console.log('Handled comments with unmatched braces:', fixed);
+    
+    // 3. Removal of remaining comments
     fixed = fixed.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
-    if (options.logging) console.log('Removed comments:', fixed);
+    if (options.logging) console.log('Removed remaining comments:', fixed);
 
-    // 3. Removal of trailing commas
+    // 4. Removal of trailing commas
     fixed = fixed.replace(/,\s*([\]}])/g, '$1');
     if (options.logging) console.log('Removed trailing commas:', fixed);
 
-    // 4. Adding quotes around unquoted keys
+    // 5. Adding quotes around unquoted keys
     fixed = fixed.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
     if (options.logging) console.log('Quoted keys:', fixed);
 
-    // 5. Conversion of single quotes to double quotes
+    // 6. Conversion of single quotes to double quotes
     fixed = fixed.replace(/'([^']*)'/g, '"$1"');
     if (options.logging) console.log('Converted single to double quotes:', fixed);
 
-    // 6. Replacement of invalid literals (NaN, undefined, Infinity, -Infinity)
+    // 7. Replacement of invalid literals (NaN, undefined, Infinity, -Infinity)
     fixed = fixed.replace(/\b(NaN|undefined|Infinity|-Infinity)\b/g, 'null');
     if (options.logging) console.log('Replaced invalid literals:', fixed);
 
-    // 6bis. Replacement of capitalized versions
+    // 8. Replacement of capitalized versions
     fixed = fixed.replace(/\bTrue\b/g, 'true')
     .replace(/\bTRUE\b/g, 'true')
     .replace(/\bFalse\b/g, 'false') // or just /false\b/i if you want to handle everything
@@ -236,29 +272,29 @@ export function repairJson(input: string, options: RepairOptions = {}): unknown 
     .replace(/\bNULL\b/g, 'null');
     if (options.logging) console.log('Replaced capitalized True/False/Null:', fixed);
 
-    // 7. Quoting unquoted values (except true/false/null)
-    fixed = fixed.replace(/:\s*(?!true\b|false\b|null\b)([a-zA-Z_][a-zA-Z0-9_]*)([\}\],])/g, ': "$1"$2');
+    // 9. Quoting unquoted values (except true/false/null)
+    fixed = fixed.replace(/:\s*(?!true\b|false\b|null\b)([a-zA-Z_][a-zA-Z0-9_]*)\s*([\}\],])/g, ': "$1"$2');
     if (options.logging) console.log('Quoted unquoted string values:', fixed);
 
-    // 7bis. Fix the case where we have : John", i.e. an unquoted word followed by a quote
+    // 10. Fix the case where we have : John", i.e. an unquoted word followed by a quote
     fixed = fixed.replace(/:\s*([a-zA-Z0-9_]+)"([\}\],])/g, ': "$1"$2');
     if (options.logging) console.log('Fixed missing opening quote for values:', fixed);
 
-    // 8. Fix any lines like {foo: bar}
+    // 11. Fix any lines like {foo: bar}
     fixed = fixBrokenStringValues(fixed);
     if (options.logging) console.log('Fixed broken string values:', fixed);
 
-    // 9. Escape unprotected quotes in strings
+    // 12. Escape unprotected quotes in strings
     fixed = escapeInnerQuotesInStrings(fixed);
     if (options.logging) console.log('Escaped inner unquoted double quotes:', fixed);
 
-    // 10. Balancing of braces/brackets (if we consider that in safeMode we don't want to "overcorrect" too much, we can condition it)
+    // 13. Balancing of braces/brackets (if we consider that in safeMode we don't want to "overcorrect" too much, we can condition it)
     if (!options.safeMode) {
       fixed = balanceJsonBrackets(fixed);
       if (options.logging) console.log('Balanced brackets:', fixed);
     }
 
-    // 11. Escape real line breaks, tabs, etc. in strings
+    // 14. Escape real line breaks, tabs, etc. in strings
     fixed = escapeControlCharsInsideStrings(fixed);
     if (options.logging) console.log('Escaped control chars:', fixed);
 

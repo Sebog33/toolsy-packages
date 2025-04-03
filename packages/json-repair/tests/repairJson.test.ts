@@ -57,6 +57,30 @@ describe('repairJson', () => {
 
   // Additional edge cases
 
+  it('removes comments in strings without other issue', () => {
+    const input = '{"name": "Seb" // test comments}';
+    const result = repairJson(input);
+    expect(result).toBe('{"name":"Seb"}');
+  });
+
+  it('removes comments in strings with one issue', () => {
+    const input = '{name: "Seb" // test comments}';
+    const result = repairJson(input);
+    expect(result).toBe('{"name":"Seb"}');
+  });
+
+  it('removes comments in strings with string value beginning only with double quotes', () => {
+    const input = '{"name": "Seb // test comments}';
+    const result = repairJson(input);
+    expect(result).toBe('{"name":"Seb"}');
+  });
+
+  it('removes comments in strings with string value without double quotes', () => {
+    const input = '{"name": Seb // test comments}';
+    const result = repairJson(input);
+    expect(result).toBe('{"name":"Seb"}');
+  });
+
   it('repairs nested unquoted keys', () => {
     const input = '{user: {name: Seb, age: 30}}';
     const result = repairJson(input);
