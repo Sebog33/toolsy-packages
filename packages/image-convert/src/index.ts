@@ -1,0 +1,1 @@
+export { pngToIco, type PngToIcoOptions, generateFavicon, type FaviconOptions } from './png-to-ico';
