@@ -1,100 +1,102 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { promises as fs } from 'fs';
-import path from 'path';
-import sharp from 'sharp'; // Pour générer une image de test
-import { pngToIco } from '../src/png-to-ico'; // Ajuster le chemin si nécessaire
-
-// Définir un répertoire temporaire pour les tests
-const testOutputDir = path.join(__dirname, 'test-output');
-const testInputPng = path.join(testOutputDir, 'test-input.png');
-const testOutputIco = path.join(testOutputDir, 'test-output.ico');
+import { describe, it, expect } from 'vitest';
+import sharp from 'sharp';
+import { convertToIco } from '../src/png-to-ico';
 
 // Fonction pour créer une image PNG simple pour les tests
-async function createTestPng(filePath: string): Promise<Buffer> {
-  const width = 64;
-  const height = 64;
-  const buffer = await sharp({
+async function createTestPng(): Promise<Buffer> {
+  return await sharp({
     create: {
-      width: width,
-      height: height,
-      channels: 4, // RGBA
+      width: 64,
+      height: 64,
+      channels: 4,
       background: { r: 255, g: 0, b: 0, alpha: 0.5 } // Rouge semi-transparent
     }
   })
   .png()
   .toBuffer();
-  await fs.writeFile(filePath, buffer);
-  return buffer;
 }
 
-describe('pngToIco', () => {
-  let testPngBuffer: Buffer;
+describe('convertToIco', () => {
+  it('should convert a PNG buffer to an ICO buffer with default options', async () => {
+    const pngBuffer = await createTestPng();
+    const icoBuffer = await convertToIco(pngBuffer);
 
-  // Créer le répertoire de sortie et l'image de test avant tous les tests
-  beforeAll(async () => {
-    await fs.mkdir(testOutputDir, { recursive: true });
-    testPngBuffer = await createTestPng(testInputPng);
+    // Vérifier que le buffer ICO est bien généré
+    expect(icoBuffer).toBeInstanceOf(Buffer);
+    expect(icoBuffer.length).toBeGreaterThan(0);
+
+    // Vérifier que c'est bien un fichier ICO (les 4 premiers octets doivent être 0x00 0x00 0x01 0x00)
+    expect(icoBuffer[0]).toBe(0x00);
+    expect(icoBuffer[1]).toBe(0x00);
+    expect(icoBuffer[2]).toBe(0x01);
+    expect(icoBuffer[3]).toBe(0x00);
   });
 
-  // Nettoyer les fichiers et le répertoire après tous les tests
-  afterAll(async () => {
-    await fs.rm(testOutputDir, { recursive: true, force: true });
+  it('should respect custom sizes', async () => {
+    const pngBuffer = await createTestPng();
+    const customSizes = [16, 32, 64];
+    
+    const icoBuffer = await convertToIco(pngBuffer, {
+      sizes: customSizes
+    });
+
+    // Vérifier que le buffer ICO est bien généré
+    expect(icoBuffer).toBeInstanceOf(Buffer);
+    expect(icoBuffer.length).toBeGreaterThan(0);
+
+    // Vérifier que le nombre d'images dans l'ICO correspond au nombre de tailles demandées
+    // Le nombre d'images est stocké à l'offset 4 (1 octet)
+    expect(icoBuffer[4]).toBe(customSizes.length);
   });
 
-  // Nettoyer le fichier de sortie potentiel avant chaque test individuel
-  beforeEach(async () => {
-    try {
-      await fs.unlink(testOutputIco);
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') { // Ignore "file not found"
-        throw error;
-      }
-    }
-  });
-
-  it('should convert a PNG file path to an ICO file with default options', async () => {
-    // Appel sans options explicites, utilise les valeurs par défaut
-    await pngToIco(testInputPng, testOutputIco);
-
-    // Vérifier si le fichier ICO existe
-    const stats = await fs.stat(testOutputIco);
-    expect(stats.isFile()).toBe(true);
-    expect(stats.size).toBeGreaterThan(0);
-  });
-
-  it('should convert a PNG Buffer to an ICO file with default options', async () => {
-    // Appel sans options explicites
-    await pngToIco(testPngBuffer, testOutputIco);
-
-    // Vérifier si le fichier ICO existe
-    const stats = await fs.stat(testOutputIco);
-    expect(stats.isFile()).toBe(true);
-    expect(stats.size).toBeGreaterThan(0);
-  });
-
-  it('should accept explicit options', async () => {
-    // Appel avec options explicites (désactivées)
-    await pngToIco(testInputPng, testOutputIco, { autoOrient: false, stripMetadata: false });
-
-    // Vérifier si le fichier ICO existe (la vérification de l'effet des options est plus complexe)
-    const stats = await fs.stat(testOutputIco);
-    expect(stats.isFile()).toBe(true);
-    expect(stats.size).toBeGreaterThan(0);
-  });
-
-  it('should throw an error for invalid input type', async () => {
-    const invalidInput: any = 12345; // Utiliser un nombre comme entrée invalide
-    // Appel sans options
-    await expect(pngToIco(invalidInput, testOutputIco))
+  it('should handle edge cases for sizes', async () => {
+    const pngBuffer = await createTestPng();
+    
+    // Test avec une taille très petite
+    await expect(convertToIco(pngBuffer, { sizes: [1] }))
       .rejects
-      .toThrow('Invalid input type. Expected string (path) or Buffer.');
+      .toThrow('Size 1 is out of range. Must be between 16 and 256 pixels.');
 
-    // Vérifier qu'aucun fichier ICO n'a été créé
-     await expect(fs.stat(testOutputIco)).rejects.toThrow(); // Doit échouer car le fichier n'existe pas
+    // Test avec une taille très grande
+    await expect(convertToIco(pngBuffer, { sizes: [1024] }))
+      .rejects
+      .toThrow('Size 1024 is out of range. Must be between 16 and 256 pixels.');
+
+    // Test avec des tailles valides mais non-standard
+    const icoBuffer = await convertToIco(pngBuffer, { sizes: [20, 40, 60] });
+    expect(icoBuffer).toBeInstanceOf(Buffer);
+    expect(icoBuffer.length).toBeGreaterThan(0);
   });
 
-  // On pourrait ajouter d'autres tests:
-  // - Fichier PNG invalide/corrompu
-  // - Chemin de sortie invalide/non accessible en écriture
-  // - Vérification plus détaillée du contenu du fichier ICO (ex: lire l'en-tête)
+  it('should handle invalid input', async () => {
+    // Test avec un buffer invalide
+    const invalidBuffer = Buffer.from('not an image');
+    await expect(convertToIco(invalidBuffer))
+      .rejects
+      .toThrow();
+
+    // Test avec un type invalide
+    const invalidInput: any = 'not a buffer';
+    await expect(convertToIco(invalidInput))
+      .rejects
+      .toThrow('Input must be a Buffer');
+  });
+
+  it('should handle different input image formats', async () => {
+    // Test avec une image JPEG
+    const jpegBuffer = await sharp({
+      create: {
+        width: 64,
+        height: 64,
+        channels: 3,
+        background: { r: 255, g: 0, b: 0 }
+      }
+    })
+    .jpeg()
+    .toBuffer();
+
+    const icoBuffer = await convertToIco(jpegBuffer);
+    expect(icoBuffer).toBeInstanceOf(Buffer);
+    expect(icoBuffer.length).toBeGreaterThan(0);
+  });
 }); 

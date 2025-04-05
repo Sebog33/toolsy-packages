@@ -1,21 +1,20 @@
 # @toolsycc/image-convert
 
-> A lightweight and focused utility to convert PNG images to ICO format and generate favicons.  
+> A lightweight and focused utility to convert images to ICO format.  
 > ✅ Works with both **TypeScript** and **JavaScript** (ESM & CommonJS).
 
 ## Features
 
-- PNG to ICO conversion
-- Complete favicon generation for web and Windows
+- Image to ICO conversion (supports PNG, JPEG, etc.)
 - Support for:
-  - Input from file path or Buffer
+  - Input from Buffer
   - EXIF-based auto-orientation
   - Metadata stripping to reduce file size
   - Automatic multiple size generation (16x16 to 256x256)
-  - Custom output directory and file naming
-  - Selective size generation
+  - Custom size selection
 - Minimalist and no unnecessary dependencies
 - Windows icon compatible output
+- Works in both Node.js and browser environments
 
 ## Installation
 
@@ -34,37 +33,39 @@ npm install @toolsycc/image-convert
 ### 🟦 TypeScript
 
 ```ts
-import { pngToIco, generateFavicon } from '@toolsycc/image-convert';
+import { convertToIco } from '@toolsycc/image-convert';
 import { promises as fs } from 'fs';
 
-// Basic ICO conversion from file path
-await pngToIco('input.png', 'output.ico');
-
-// Generate complete favicon set
-await generateFavicon('input.png', {
-  outputDir: 'public/favicon',    // Custom output directory
-  baseName: 'my-favicon',         // Custom base name for files
-  webSizes: [32, 64, 128],       // Only generate specific sizes
-  generateIco: true              // Also generate Windows ICO file
-});
-
-// From Buffer with detailed example
-async function convertPngToIco() {
-  // Read PNG file into a Buffer
-  const pngBuffer = await fs.readFile('input.png');
+// Basic ICO conversion from file
+async function convertFileToIco() {
+  // Read image file into a Buffer
+  const imageBuffer = await fs.readFile('input.png');
   
-  // Convert with custom options
-  await pngToIco(pngBuffer, 'output.ico', {
-    autoOrient: true,    // Auto-orient based on EXIF
-    stripMetadata: true  // Remove metadata
-  });
+  // Convert to ICO buffer
+  const icoBuffer = await convertToIco(imageBuffer);
+  
+  // Save the ICO buffer to a file
+  await fs.writeFile('output.ico', icoBuffer);
   
   console.log('Conversion completed successfully');
 }
 
+// With custom options
+async function convertWithOptions() {
+  const imageBuffer = await fs.readFile('input.png');
+  
+  const icoBuffer = await convertToIco(imageBuffer, {
+    autoOrient: true,    // Auto-orient based on EXIF
+    stripMetadata: true, // Remove metadata
+    sizes: [16, 32, 64] // Custom sizes
+  });
+  
+  await fs.writeFile('output.ico', icoBuffer);
+}
+
 // Handle errors
 try {
-  await convertPngToIco();
+  await convertFileToIco();
 } catch (error) {
   console.error('Conversion failed:', error);
 }
@@ -73,56 +74,69 @@ try {
 ### 🟨 JavaScript (CommonJS)
 
 ```js
-const { pngToIco, generateFavicon } = require('@toolsycc/image-convert');
+const { convertToIco } = require('@toolsycc/image-convert');
 const fs = require('fs').promises;
 
-// Simple ICO conversion
-pngToIco('input.png', 'output.ico')
-  .then(() => console.log('Conversion completed'))
-  .catch(console.error);
-
-// Generate favicons
-generateFavicon('input.png')
-  .then(() => console.log('Favicons generated'))
-  .catch(console.error);
-
-// Buffer example
+// Simple conversion
 async function convert() {
   const buffer = await fs.readFile('input.png');
-  await pngToIco(buffer, 'output.ico');
+  const icoBuffer = await convertToIco(buffer);
+  await fs.writeFile('output.ico', icoBuffer);
 }
+
+convert()
+  .then(() => console.log('Conversion completed'))
+  .catch(console.error);
 ```
 
 ### 🟩 JavaScript (ESM)
 
 ```js
-import { pngToIco, generateFavicon } from '@toolsycc/image-convert';
+import { convertToIco } from '@toolsycc/image-convert';
 import { promises as fs } from 'fs';
 
 // With error handling
 try {
-  // Generate complete favicon set
-  await generateFavicon('input.png', {
-    outputDir: 'public/favicon',
-    baseName: 'site-favicon'
-  });
-  
-  // Using Buffer for ICO conversion
   const imageBuffer = await fs.readFile('input.png');
-  await pngToIco(imageBuffer, 'output.ico');
-  
+  const icoBuffer = await convertToIco(imageBuffer);
+  await fs.writeFile('output.ico', icoBuffer);
   console.log('Conversion successful');
 } catch (error) {
   console.error('Conversion error:', error);
 }
 ```
 
+### 🌐 Browser Usage
+
+```js
+import { convertToIco } from '@toolsycc/image-convert';
+
+// Convert from File input
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  
+  const icoBuffer = await convertToIco(buffer);
+  
+  // Create download link
+  const blob = new Blob([icoBuffer], { type: 'image/x-icon' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'icon.ico';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+```
+
 ## Options
 
-### PngToIcoOptions
+### IcoOptions
 
 ```ts
-interface PngToIcoOptions {
+interface IcoOptions {
   /**
    * Auto-orient based on EXIF data
    * @default true
@@ -134,51 +148,27 @@ interface PngToIcoOptions {
    * @default true
    */
   stripMetadata?: boolean;
-}
-```
-
-### FaviconOptions
-
-```ts
-interface FaviconOptions extends PngToIcoOptions {
-  /**
-   * Output directory for the favicon files
-   * @default "favicon"
-   */
-  outputDir?: string;
   
   /**
-   * Base name for the favicon files
-   * @default "favicon"
-   */
-  baseName?: string;
-  
-  /**
-   * Sizes to generate for web favicons (in pixels)
+   * Sizes to generate for the ICO file (in pixels)
+   * Must be between 16 and 256 pixels
    * @default [16, 24, 32, 48, 64, 96, 128, 192, 256]
    */
-  webSizes?: number[];
-  
-  /**
-   * Whether to generate Windows ICO file
-   * @default true
-   */
-  generateIco?: boolean;
+  sizes?: number[];
 }
 ```
 
-## Output Files
+## Error Handling
 
-When using `generateFavicon`, the following files are created by default:
-
-- `favicon.ico` - Windows icon file containing all sizes
-- PNG files for each size: `favicon-16x16.png`, `favicon-32x32.png`, etc.
-
-You can customize the output directory and base name using options.
+The function will throw errors in the following cases:
+- Input is not a Buffer
+- Image size is less than 16px or greater than 256px
+- Invalid image format
+- Processing errors
 
 ## Motivation
 
-This package was designed to simplify PNG to ICO conversion and favicon generation, particularly useful for developers creating Windows applications or websites requiring high-quality favicons.
+This package was designed to provide a simple and efficient way to convert images to ICO format, working seamlessly in both Node.js and browser environments. It's particularly useful for developers creating Windows applications or websites requiring high-quality icons.
 
 ## Author
 
