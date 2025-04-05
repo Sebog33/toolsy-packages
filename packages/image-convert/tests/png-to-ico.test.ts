@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import sharp from 'sharp';
-import { convertToIco } from '../src/png-to-ico';
+import { convertToIco } from '../src/index';
 
 // Fonction pour créer une image PNG simple pour les tests
 async function createTestPng(): Promise<Buffer> {
