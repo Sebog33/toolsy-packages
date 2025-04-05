@@ -14,7 +14,7 @@
   - Custom size selection
 - Minimalist and no unnecessary dependencies
 - Windows icon compatible output
-- Works in both Node.js and browser environments
+- Designed for Node.js environments only (sharp-based).
 
 ## Installation
 
@@ -31,6 +31,8 @@ npm install @toolsycc/image-convert
 ## Usage Examples
 
 ### 🟦 TypeScript
+
+> ⚠️ This module relies on `sharp` and must be used **server-side only**. Import it in Next.js API routes or server functions.
 
 ```ts
 import { convertToIco } from '@toolsycc/image-convert';
@@ -105,33 +107,6 @@ try {
   console.error('Conversion error:', error);
 }
 ```
-
-### 🌐 Browser Usage
-
-```js
-import { convertToIco } from '@toolsycc/image-convert';
-
-// Convert from File input
-const fileInput = document.querySelector('input[type="file"]');
-fileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  
-  const icoBuffer = await convertToIco(buffer);
-  
-  // Create download link
-  const blob = new Blob([icoBuffer], { type: 'image/x-icon' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'icon.ico';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-```
-
-## Options
 
 ### IcoOptions
 
